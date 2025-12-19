@@ -275,7 +275,7 @@ app.post("/trips/:id/photos", authenticateToken, (req, res) => {
 app.post("/uploads", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
   const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  return res.status(201).json({ url: fileUrl });
+  return res.status(201).json({ data: { url: fileUrl } });
 });
 
 app.use((req, res) => res.status(404).json({ error: "Not found" }));

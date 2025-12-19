@@ -1,14 +1,17 @@
-import { API } from "@/services/api";
+import { useTrips } from "@/hooks/use-api-fetch";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useMutation } from "@tanstack/react-query";
+import * as Device from "expo-device";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useController, useForm } from "react-hook-form";
 import {
   Alert,
   Linking,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,16 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddTripModal() {
   const router = useRouter();
-  const [tripTitle, setTripTitle] = useState("");
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [selectedImages, setSelectedImages] = useState<Array<string>>([]);
-  const [uploadedPhotos, setuploadedPhotos] = useState<Array<string>>([]);
-  const [coverImage, setcoverImage] = useState<string>("");
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const { control, setValue, handleSubmit } = useForm();
 
   const openAppSettings = () => {
     Linking.openSettings();
@@ -44,9 +39,7 @@ export default function AddTripModal() {
   };
 
   // Fonction pour vérifier si on est sur simulateur
-  const isSimulator = () => {
-    return Platform.OS === "ios" || Platform.OS === "android";
-  };
+  const isSimulator = !Device.isDevice;
 
   // Afficher une alerte simulateur
 
@@ -141,7 +134,7 @@ export default function AddTripModal() {
         const formattedAddress =
           `${city}${city && country ? ", " : ""}${country}`.trim();
 
-        setDestination(formattedAddress);
+        setValue("destination", formattedAddress);
         console.log("Resolved address: ", formattedAddress);
       }
     } catch (error) {
@@ -150,62 +143,61 @@ export default function AddTripModal() {
     }
   };
 
-  const uploadImages = async (uploadedPhotos: string[], coverImage: string) => {
-    if (selectedImages.length > 0) {
-      const totalImages = selectedImages.length;
+  const { createTrip } = useTrips();
+  const { isPending, mutateAsync } = useMutation({
+    mutationKey: ["createTrip"],
+    mutationFn: createTrip,
+  });
 
-      for (let i = 0; i < selectedImages.length; i++) {
-        const imageUri = selectedImages[i];
-        const uploadedUrl = await API.uploadImage(imageUri);
-        uploadedPhotos.push(uploadedUrl);
-
-        if (i == 0) {
-          coverImage = uploadedUrl;
-        }
-
-        const progress = Math.round(((i + 1) / totalImages) * 100);
-        setUploadProgress(progress);
-      }
-
-      setuploadedPhotos(uploadedPhotos);
-      setcoverImage(coverImage);
-    }
-  };
-
-  const handleSaveTrip = async () => {
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-
-      uploadImages(uploadedPhotos, coverImage);
-
-      let trip = {
-        title: tripTitle,
-        destination,
-        startDate,
-        endDate,
-        description,
-        image: coverImage,
-        photos: selectedImages,
-      };
-
-      const newTrip = await API.createTrip(trip);
-
-      console.log("Voyage créé", newTrip);
-
-      setIsUploading(false);
-
-      setTimeout(() => {
+  const onSubmit = async (d: any) => {
+    await mutateAsync({
+      onSuccess: () => {
         Alert.alert("Succès", "Votre voyage a été créé !", [
-          { text: "OK", onPress: () => router.back },
+          { text: "OK", onPress: () => router.back() },
         ]);
-      }, 500);
-    } catch (error) {
-      console.log("Erreur:", error);
-      setIsUploading(false);
-      Alert.alert("Erreur", "Impossible de créer le voyage");
-    }
+      },
+      trip: {
+        title: d.tripTitle,
+        destination: d.destination,
+        startDate: new Date().toString(),
+        endDate: d.endDate,
+        description: d.description,
+        photos: selectedImages,
+      },
+    });
   };
+
+  const Input = (props: {
+    name: string;
+    controller: typeof control;
+    placeholder: string;
+    className?: object;
+    multiline?: boolean;
+    numberOfLines?: number;
+  }) => {
+    const { field } = useController({
+      name: props.name,
+      control: props.controller,
+      defaultValue: "",
+    });
+    return (
+      <TextInput
+        style={[styles.input, props.className ? props.className : {}]}
+        placeholder={props.placeholder}
+        value={field.value}
+        onChangeText={field.onChange}
+        multiline={props.multiline ? true : false}
+        numberOfLines={props.numberOfLines ? props.numberOfLines : 1}
+        placeholderTextColor="#9ca3af"
+        textAlignVertical="top"
+      />
+    );
+  };
+  const { field: fieldEndDate } = useController({
+    name: "endDate",
+    control: control,
+    defaultValue: new Date(),
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -217,9 +209,14 @@ export default function AddTripModal() {
           <Text style={styles.label}>Cover photo</Text>
           <View style={styles.photoUpload}>
             <View style={styles.photoButtons}>
-              <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
-                <Ionicons name="camera" size={32} color="#a855f7" />
-              </TouchableOpacity>
+              {!!isSimulator ? null : (
+                <TouchableOpacity
+                  style={styles.photoButton}
+                  onPress={takePhoto}
+                >
+                  <Ionicons name="camera" size={32} color="#a855f7" />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
                 <Ionicons name="image" size={32} color="#ec4899" />
               </TouchableOpacity>
@@ -235,11 +232,10 @@ export default function AddTripModal() {
 
         <View style={styles.section}>
           <Text style={styles.label}>Trip Title</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter trip title"
-            value={tripTitle}
-            onChangeText={setTripTitle}
+          <Input
+            name="tripTitle"
+            controller={control}
+            placeholder="My Trip to Paris"
           />
         </View>
 
@@ -249,11 +245,10 @@ export default function AddTripModal() {
           <Text style={styles.label}>Destination</Text>
           <View style={styles.inputWithIcon}>
             <Ionicons name="location-outline" size={16} color="#6b7280" />
-            <TextInput
-              style={styles.inputFlex}
+            <Input
+              name="destination"
+              controller={control}
               placeholder="City, Country"
-              value={destination}
-              onChangeText={setDestination}
             />
             <TouchableOpacity onPress={getLocation}>
               <Text style={styles.gpsButton}>
@@ -273,12 +268,15 @@ export default function AddTripModal() {
               <Text style={styles.label}>Date de retour</Text>
               <View style={styles.inputWithIcon}>
                 <Ionicons name="calendar-outline" size={24} color="#6b7280" />
-                <TextInput
-                  style={styles.inputFlex}
-                  placeholder="JJ/MM/AAAA"
-                  value={endDate}
-                  onChangeText={setEndDate}
-                  placeholderTextColor="#9ca3af"
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={fieldEndDate.value}
+                  mode={"date"}
+                  is24Hour={true}
+                  onChange={(e, selectedDate) => {
+                    const currentDate = selectedDate || fieldEndDate.value;
+                    setValue("endDate", currentDate);
+                  }}
                 />
               </View>
             </View>
@@ -288,21 +286,19 @@ export default function AddTripModal() {
         {/* Description */}
         <View>
           <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
+          <Input
+            name="description"
+            controller={control}
+            className={styles.textArea}
             placeholder="Décrivez votre voyage..."
-            value={description}
-            onChangeText={setDescription}
             multiline
             numberOfLines={4}
-            textAlignVertical="top"
-            placeholderTextColor="#9ca3af"
           />
         </View>
 
         {/* Upload Progress */}
 
-        {isUploading && (
+        {isPending && (
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
               <View style={styles.progressInfo}>
@@ -315,18 +311,6 @@ export default function AddTripModal() {
                   Téléchargement en cours...
                 </Text>
               </View>
-              <Text style={styles.progressPercent}>{uploadProgress}%</Text>
-            </View>
-            <View style={styles.progressBarBg}>
-              <LinearGradient
-                colors={["#a855f7", "#ec4899"]}
-                style={[
-                  styles.progressBarFill,
-                  { width: `${uploadProgress}%` },
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
             </View>
           </View>
         )}
@@ -335,8 +319,8 @@ export default function AddTripModal() {
 
         <TouchableOpacity
           style={styles.saveButton}
-          onPress={handleSaveTrip}
-          disabled={isUploading}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isPending}
         >
           <LinearGradient
             colors={["#a855f7", "#ec4899"]}
@@ -345,7 +329,7 @@ export default function AddTripModal() {
             end={{ x: 1, y: 0 }}
           >
             <Text style={styles.saveButtonText}>
-              {isUploading ? "Enregistrement ..." : "Créer le voyage"}
+              {isPending ? "Enregistrement ..." : "Créer le voyage"}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -383,6 +367,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderStyle: "dashed",
     borderColor: "#e9d5ff",
+    padding: 16,
   },
   photoButtons: {
     flexDirection: "row",

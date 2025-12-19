@@ -6,6 +6,7 @@ import useCheckResponse from "./use-check-response";
 
 export function useTrips() {
   const { checkMutationResponse } = useCheckResponse();
+  const { uploadImage } = useImage();
 
   const retrieveTrips = async () => {
     const isOnline = await OFFLINE.checkIsOnline();
@@ -38,6 +39,61 @@ export function useTrips() {
       return {
         status: 500,
         data: cached || [],
+      };
+    }
+  };
+
+  const createTrip = async (payload: {
+    trip: Omit<Trip, "id">;
+    onSuccess?: (createdTrip: Trip) => void;
+  }) => {
+    const isOnline = await OFFLINE.checkIsOnline();
+    if (isOnline) {
+      const uploadImages = async () => {
+        const photos: string[] = [];
+        let coverImage = "";
+
+        for (let i = 0; i < (payload.trip.photos ?? []).length; i++) {
+          const selectedImage = payload.trip.photos?.[i];
+          if (!selectedImage) continue;
+          const url = await uploadImage(selectedImage);
+          photos.push(url?.data?.url || "");
+          if (i === 0) coverImage = url?.data?.url || "";
+        }
+
+        console.log(photos, coverImage);
+
+        return { photos, coverImage };
+      };
+
+      const { photos, coverImage } = await uploadImages();
+      const createdTrip = await UserServices.postCreateTrip({
+        ...payload.trip,
+        photos,
+        image: coverImage,
+      }).then(async (res: Response) => {
+        const response = await checkMutationResponse<Trip>({
+          res,
+          onSuccess: {
+            action: payload.onSuccess,
+          },
+        });
+        return response;
+      });
+      return createdTrip;
+    } else {
+      console.log("Offline: Add to queue");
+
+      await OFFLINE.addToQueue({
+        type: "CREATE",
+        endpoint: "/trips",
+        method: "POST",
+        payload: payload.trip,
+      });
+
+      return {
+        ...payload.trip,
+        id: `local-${Date.now()}`,
       };
     }
   };
@@ -127,6 +183,7 @@ export function useTrips() {
     retrieveStatistics,
     retrieveUpcomingTrips,
     retrieveTripById,
+    createTrip,
   };
 }
 
@@ -169,4 +226,35 @@ export function useActivities() {
   };
 
   return { retrieveActivities };
+}
+
+export function useImage() {
+  const { checkMutationResponse } = useCheckResponse();
+
+  const uploadImage = async (uri: string) => {
+    const formData = new FormData();
+
+    const filename = uri.split("/").pop() || "photo.jpg";
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : "image/jpeg";
+
+    formData.append("file", {
+      uri,
+      name: filename,
+      type,
+    } as any);
+
+    const response = await UserServices.postUploadImage(formData).then(
+      async (res: Response) => {
+        const checkedResponse = await checkMutationResponse<{ url: string }>({
+          res,
+        });
+        return checkedResponse;
+      },
+    );
+    console.log(response);
+    return response;
+  };
+
+  return { uploadImage };
 }

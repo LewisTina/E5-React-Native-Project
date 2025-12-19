@@ -1,3 +1,4 @@
+import Trip from "@/types/trip";
 import BaseServices from "./baseservices";
 import { UserUrl } from "./urls";
 
@@ -33,6 +34,25 @@ class UserServices {
       url: UserUrl.GET_ACTIVITIES,
       required_auth: true,
     });
+
+  /* Post Requests */
+
+  static postCreateTrip = (trip: Omit<Trip, "id">) =>
+    BaseServices.postRequest({
+      url: UserUrl.POST_TRIP,
+      required_auth: true,
+      body: trip,
+    });
+
+  static postUploadImage = (formData: FormData) =>
+    BaseServices.postRequest(
+      {
+        url: UserUrl.POST_UPLOAD_IMAGE,
+        required_auth: true,
+        body: formData,
+      },
+      true,
+    );
 }
 
 export default UserServices;

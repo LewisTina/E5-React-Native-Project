@@ -10,7 +10,11 @@ export const UserUrl = {
   GET_TRIPS: `${basUrl}/trips`,
   GET_UPCOMING_TRIPS: `${basUrl}/trips-upcoming`,
   GET_STATS: `${basUrl}/stats`,
+  POST_TRIP: `${basUrl}/trips`,
 
   /* Activities */
   GET_ACTIVITIES: `${basUrl}/activities`,
+
+  /* Upload Image */
+  POST_UPLOAD_IMAGE: `${basUrl}/uploads`,
 };
