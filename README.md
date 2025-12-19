@@ -2,21 +2,21 @@
 # Travel Mate APP
 Documentation rédigée en Français dans le cadre académique.
 
-Ceci est le repo de site fullstack du blog de recette pour l'examen developpement Fullstack 23/24
+Ceci est le repo de site fullstack du projet Travel Mate pour l'examen developpement Cross-plateforme 25/26 E5
 
 
 
 
 ## Get started
 
-Après avoir clonner ce repo, suivez les commandes suivantes pour lancer l'application
+Après avoir clonner ce repo, suivez les commandes suivantes pour lancer installer toutes les dépendances des 2 projects (Front & Mobile)
 
 ```bash
   $ cd <repo-folder-name>
   $ npm install:all
 ```
 
-Cette commande installe les différentes dépendances des 3 applications respectives (front & back). en utilisant le fichier `package.json` de chacune d'elle.
+Cette commande installe les différentes dépendances des 2 applications respectives (front & Mobile). en utilisant le fichier `package.json` de chacune d'elle.
 
 
 ## Exécuter en mode test
@@ -28,22 +28,22 @@ Pour exécuter ces applications en mode développement vu que nous n'avons pas d
 ```bash
   npm run back:dev
 ```
-il est configuré pour tourner sur le port 2780 du localhost [http://localhost:2780](http://localhost:2780).
+il est configuré pour tourner sur le port 4000 du localhost [http://localhost:4000](http://localhost:4000).
 
-`Dans un second pour lancer le frontend`
+`Dans un second pour lancer le Mobile, vous devez utiliser un second terminal pour garder les process en cours`
 
 ```bash
-  npm run front:dev
+  npm run mobile:start
 ```
-Configuré pour tourner sur le port 2781 du localhost [http://localhost:2781](http://localhost:2781).
+Configuré pour tourner par défaut d'après EXPO sur le port 8081 du localhost [http://localhost:8081](http://localhost:8081).
 ## Stack Technique
 
-**Client:** React, Next, TailwindCSS
+**Client:** React-Native, Expo
 
 **Server:** Node
 
 
-## Membres du groupe
+## Etudiant
 
 - [@Pierre Lewis ABOUTOU TINA](https://www.github.com/LewisTina)
 
@@ -51,5 +51,5 @@ Configuré pour tourner sur le port 2781 du localhost [http://localhost:2781](ht
 ## Documentation
 
 Consigne d'utilisation assez simple.
-Pour l'utilisation des fonctionnalités reservées aux memebres, la création d'un compte s'effectue en 2 minutes, via un seul formulaire (Aucune restrictions ou exigence)
+Pour l'utilisation des fonctionnalités reservées aux membres, la création d'un compte s'effectue en 2 minutes, via un seul formulaire (Aucune restrictions ou exigence)
 

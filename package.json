@@ -6,10 +6,10 @@
       "install:all": "cd back && npm i && cd ../mobile && npm i",
       "back:dev": "cd back && npm run dev",
       "back:start": "cd back && npm run start",
-      "mobile:start": "cd mobile && expo start",
-      "mobile:android": "expo run:android",
-      "mobile:ios": "expo run:ios",
-      "mobile:web": "expo start --web"
+      "mobile:start": "cd mobile && npm run start",
+      "mobile:android": "npm run android",
+      "mobile:ios": "npm run ios",
+      "mobile:web": "npm run start --web"
     }
   }
   
