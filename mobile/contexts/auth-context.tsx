@@ -104,7 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       setError(null);
-      await auth.logout();
+      await auth.logout().then(() => {
+        auth.clearTokens();
+        console.log("✅ [useAuth] Logged out");
+      });
       setUser(null);
       setIsAuthenticated(false);
     } catch (err) {

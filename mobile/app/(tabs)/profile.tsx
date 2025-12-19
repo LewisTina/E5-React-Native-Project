@@ -1,5 +1,8 @@
 import { useAuth } from "@/contexts/auth-context";
+import { useTrips } from "@/hooks/use-api-fetch";
+import { useAppSelector } from "@/store/hook";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
@@ -15,25 +18,37 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { logout } = useAuth();
-  const stats = [
+  const { logout, user } = useAuth();
+  const { retrieveStatistics } = useTrips();
+  const { data: statisticsDatas } = useQuery({
+    queryKey: ["statistics"],
+    queryFn: retrieveStatistics,
+  });
+  const favorites = useAppSelector((state) => state.favorites.list);
+
+  const stats: {
+    label: string;
+    value: string;
+    icon: string;
+    colors: readonly [string, string];
+  }[] = [
     {
       label: "Voyages",
-      value: "12",
+      value: (statisticsDatas?.data?.totalTrips || 0).toString(),
       icon: "map-outline",
-      colors: ["#a855f7", "#ec4899"] as const,
+      colors: ["#a855f7", "#ec4899"],
     },
     {
       label: "Photos",
-      value: "250",
+      value: (statisticsDatas?.data?.totalPhotos || 0).toString(),
       icon: "camera",
-      colors: ["#3b82f6", "#06b6d4"] as const,
+      colors: ["#3b82f6", "#06b6d4"],
     },
     {
       label: "Favoris",
-      value: "12",
+      value: favorites.length.toString(),
       icon: "heart-outline",
-      colors: ["#ef4444", "#f43f5e"] as const,
+      colors: ["#ef4444", "#f43f5e"],
     },
   ];
 
@@ -52,8 +67,8 @@ export default function ProfileScreen() {
                 <Text style={styles.avatarEmoji}>😎​</Text>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>Odilon Hema</Text>
-                <Text style={styles.profileEmail}>dummy@mail.com</Text>
+                <Text style={styles.profileName}>{user?.name}</Text>
+                <Text style={styles.profileEmail}>{user?.email}</Text>
               </View>
             </View>
             {/*Stats*/}
