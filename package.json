@@ -1,0 +1,15 @@
+{
+    "name": "Travel Mate App",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+      "install:all": "cd back && npm i && cd ../mobile && npm i",
+      "back:dev": "cd back && npm run dev",
+      "back:start": "cd back && npm run start",
+      "mobile:start": "cd mobile && expo start",
+      "mobile:android": "expo run:android",
+      "mobile:ios": "expo run:ios",
+      "mobile:web": "expo start --web"
+    }
+  }
+  
