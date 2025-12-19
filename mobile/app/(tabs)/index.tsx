@@ -26,17 +26,16 @@ export default function HomeScreen() {
   const router = useRouter();
   const { retrieveUpcomingTrips, retrieveStatistics } = useTrips();
   const { retrieveActivities } = useActivities();
-  const { data: statisticsDatas, isLoading: statisticsLoading } = useQuery({
+  const { data: statisticsDatas } = useQuery({
     queryKey: ["statistics"],
     queryFn: retrieveStatistics,
   });
-  const { data: upcomingTripsDatas, isLoading: upcomingTripsLoading } =
-    useQuery({
-      queryKey: ["upcomingTrips"],
-      queryFn: retrieveUpcomingTrips,
-    });
+  const { data: upcomingTripsDatas } = useQuery({
+    queryKey: ["upcomingTrips"],
+    queryFn: retrieveUpcomingTrips,
+  });
 
-  const { data: activitiesDatas, isLoading: activitiesLoading } = useQuery({
+  const { data: activitiesDatas } = useQuery({
     queryKey: ["activities"],
     queryFn: retrieveActivities,
   });
@@ -87,7 +86,6 @@ export default function HomeScreen() {
 
           {/* Stats */}
 
-          {/* <View style={{ flexDirection : 'row', justifyContent : 'space-between' }}> */}
           <View style={styles.statsContainer}>
             {stats.map((stat, index) => (
               <View key={index} style={styles.statCard}>
