@@ -1,5 +1,5 @@
 export default interface Trip {
-  id: string | number;
+  id: string;
   title: string;
   destination: string;
   startDate: string;

@@ -39,6 +39,7 @@ Configuré pour tourner par défaut d'après EXPO sur le port 8081 du localhost 
 
 Utilisation de `prettier` pour formatter de manière uniforme tous les fichiers
 Centralisation des services `GET, POST, DELETE, PUT` avec vérification d'authentification nécessaire ou pas avec un base services afin de construire les en-têtes de requêtes de façon standard
+Utilisation de `Redux`Pour la gestion des favoris
 
 ## Stack Technique
 

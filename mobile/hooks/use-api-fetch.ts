@@ -42,6 +42,18 @@ export function useTrips() {
     }
   };
 
+  const retrieveTripById = async (id: string) => {
+    const trips = await UserServices.getTripById(id).then(
+      async (res: Response) => {
+        const response = await checkMutationResponse<Trip>({
+          res,
+        });
+        return response;
+      },
+    );
+    return trips;
+  };
+
   const retrieveStatistics = async () => {
     const isOnline = await OFFLINE.checkIsOnline();
 
@@ -90,12 +102,10 @@ export function useTrips() {
             return response;
           },
         );
-        await OFFLINE.cacheTrips(trips.data);
         return trips;
       } catch (error) {
         console.log("Erreur fetch, utilisation du cache", error);
         const cached = await OFFLINE.getCachedTrips();
-
         return {
           status: 500,
           data: (cached || []).splice(0, 3),
@@ -112,7 +122,12 @@ export function useTrips() {
     }
   };
 
-  return { retrieveTrips, retrieveStatistics, retrieveUpcomingTrips };
+  return {
+    retrieveTrips,
+    retrieveStatistics,
+    retrieveUpcomingTrips,
+    retrieveTripById,
+  };
 }
 
 export function useActivities() {

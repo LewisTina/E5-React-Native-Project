@@ -1,5 +1,5 @@
 import { Activity } from "@/types/activities";
-import { TripStatistics } from "@/types/trip";
+import Trip, { TripStatistics } from "@/types/trip";
 import { config } from "@/utils/env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -20,16 +20,6 @@ interface QueueAction {
   method: "POST" | "PUT" | "DELETE";
   payload: any;
   timestamp: number;
-}
-
-interface Trip {
-  title: string;
-  destination: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  image?: string;
-  photos?: string[];
 }
 
 // Network helpers

@@ -206,6 +206,15 @@ app.get("/trips", authenticateToken, (req, res) => {
   });
 });
 
+app.get("/trips/:id", authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const trip = trips.find((t) => t.id === id);
+  if (!trip) return res.status(404).json({ error: "Trip not found" });
+  return res.json({
+    data: trip,
+  });
+});
+
 app.get("/activities", authenticateToken, (req, res) => {
   return res.json({
     data: activities,

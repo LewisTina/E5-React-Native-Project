@@ -40,10 +40,10 @@
     "destination": "Marseille, France",
     "startDate": "",
     "endDate": "09/12/2025",
-    "image": "http://localhost:4000/uploads/1765281636765-1520b106-cdd9-494f-9c0f-69eb882b9117.jpeg",
+    "image": "http://localhost:4000/uploads/1765464069935-8fc9f239-e183-4627-a84a-165d98ebb009.jpeg",
     "description": "Test",
     "photos": [
-      "http://localhost:4000/uploads/1765281636765-1520b106-cdd9-494f-9c0f-69eb882b9117.jpeg",
+      "http://localhost:4000/uploads/1765464069935-8fc9f239-e183-4627-a84a-165d98ebb009.jpeg",
       "http://localhost:4000/uploads/1765281636819-ea097dac-d318-44fa-bd88-0a6687b821f2.heic"
     ],
     "location": {

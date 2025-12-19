@@ -1,5 +1,4 @@
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,47 +7,56 @@ import {
   View,
 } from "react-native";
 
+import { useTrips } from "@/hooks/use-api-fetch";
+import { useAppSelector } from "@/store/hook";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { IMAGES_SOURCES } from ".";
 
 export default function TabTwoScreen() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<string>("All");
+  const { retrieveTrips } = useTrips();
+  const { data: tripsDatas } = useQuery({
+    queryKey: ["trips"],
+    queryFn: retrieveTrips,
+  });
 
-  const TRIPS_DATA = [
-    {
-      id: "1",
-      title: "Trip to Bali",
-      destination: "Bali, Indonesia",
-      startDate: "2024-08-10",
-      endDate: "2024-08-20",
-      image: "bali",
-      photosCount: 3,
-    },
-    {
-      id: "2",
-      title: "Trip to Tokyo",
-      destination: "Tokyo, Japan",
-      startDate: "2024-09-15",
-      endDate: "2024-09-25",
-      image: "tokyo",
-      photosCount: 5,
-    },
-    {
-      id: "3",
-      title: "Trip to Paris",
-      destination: "Paris, France",
-      startDate: "2024-10-05",
-      endDate: "2024-10-15",
-      image: "paris",
-      photosCount: 8,
-    },
-  ];
+  const favorites = useAppSelector((state) => state.favorites.list);
+  const [search, setSearch] = useState("");
 
   const tabs = ["All", "Upcoming", "Past", "Favorites"];
+
+  const filteredTrips = useMemo(() => {
+    const now = Date.now();
+
+    if (selectedTab === "Favorites") {
+      return favorites.filter((trip) =>
+        `${trip.title} ${trip.destination}`
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      );
+    }
+
+    return tripsDatas?.data
+      ?.filter((trip) => {
+        if (selectedTab === "Upcoming") {
+          return new Date(trip.startDate).getTime() > now;
+        }
+        if (selectedTab === "Past") {
+          return new Date(trip.endDate).getTime() < now;
+        }
+        return true;
+      })
+      .filter((trip) =>
+        `${trip.title} ${trip.destination}`
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      );
+  }, [tripsDatas, favorites, selectedTab, search]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -60,7 +68,12 @@ export default function TabTwoScreen() {
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
             <Ionicons name="search" size={20} color="#9ca3af" />
-            <TextInput style={styles.searchInput} placeholder="Search trips" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search trips"
+              value={search}
+              onChangeText={setSearch}
+            />
           </View>
           <TouchableOpacity style={styles.filterButton}>
             <Ionicons name="options-outline" size={24} color="white" />
@@ -96,59 +109,77 @@ export default function TabTwoScreen() {
 
         {/* Trips List */}
         <View style={styles.tripsList}>
-          {TRIPS_DATA.map((trip) => (
-            <TouchableOpacity key={trip.id} style={styles.tripCard}>
-              {/* Image */}
-              <View style={styles.tripImageContainer}>
-                <Image
-                  source={
-                    IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES] ||
-                    trip.image
-                  }
-                  style={styles.tripImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.tripImageOverlay} />
-                <View style={styles.tripImageContent}>
-                  <Text style={styles.tripCardTitle}>{trip.title}</Text>
-                  <View style={styles.tripLocation}>
-                    <Ionicons name="location-outline" size={16} color="white" />
-                    <Text style={styles.tripLocationText}>
-                      {trip.destination}
-                    </Text>
+          {filteredTrips?.map((trip) => {
+            console.log(trip.image);
+            return (
+              <TouchableOpacity
+                key={trip.title}
+                style={styles.tripCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/trips/[id]",
+                    params: { id: trip.id, from: "trips" },
+                  })
+                }
+              >
+                {/* Image */}
+                <View style={styles.tripImageContainer}>
+                  <Image
+                    source={trip.image ?? trip.photos?.[0] ?? undefined}
+                    style={styles.tripImage}
+                    resizeMode="cover"
+                  />
+
+                  <View style={styles.tripImageOverlay} />
+                  <View style={styles.tripImageContent}>
+                    <Text style={styles.tripCardTitle}>{trip.title}</Text>
+                    <View style={styles.tripLocation}>
+                      <Ionicons
+                        name="location-outline"
+                        size={16}
+                        color="white"
+                      />
+                      <Text style={styles.tripLocationText}>
+                        {trip.destination}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              {/* Trip info */}
+                {/* Trip info */}
 
-              <View style={styles.tripCardInfo}>
-                <View style={styles.tripDate}>
-                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                  <Text style={styles.tripDateText}>
-                    {new Date(trip.startDate).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                    })}{" "}
-                    -
-                    {new Date(trip.endDate).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </Text>
-                </View>
-                <View style={styles.tripPhotos}>
-                  <View style={styles.photoCircle} />
-                  <View style={[styles.photoCircle, styles.photoCircle2]} />
-                  <View style={[styles.photoCircle, styles.photoCircle3]}>
-                    <Text style={styles.tripPhotoCount}>
-                      {trip.photosCount}
+                <View style={styles.tripCardInfo}>
+                  <View style={styles.tripDate}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={16}
+                      color="#6b7280"
+                    />
+                    <Text style={styles.tripDateText}>
+                      {new Date(trip.startDate).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                      })}{" "}
+                      -
+                      {new Date(trip.endDate).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                      })}
                     </Text>
                   </View>
+                  <View style={styles.tripPhotos}>
+                    <View style={styles.photoCircle} />
+                    <View style={[styles.photoCircle, styles.photoCircle2]} />
+                    <View style={[styles.photoCircle, styles.photoCircle3]}>
+                      <Text style={styles.tripPhotoCount}>
+                        {trip.photos?.length || 0}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            );
+          })}
         </View>
         <View style={{ height: 20 }} />
       </ScrollView>

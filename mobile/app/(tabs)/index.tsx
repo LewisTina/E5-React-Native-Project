@@ -16,12 +16,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export const IMAGES_SOURCES = {
-  paris: require("@/assets/images/paris.jpeg"),
-  tokyo: require("@/assets/images/tokyo.jpeg"),
-  bali: require("@/assets/images/bali.jpeg"),
-};
-
 export default function HomeScreen() {
   const router = useRouter();
   const { retrieveUpcomingTrips, retrieveStatistics } = useTrips();
@@ -121,20 +115,21 @@ export default function HomeScreen() {
           );
           return (
             <TouchableOpacity key={trip.title} style={styles.tripCard}>
-              <Image
-                source={
-                  IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES] ||
-                  trip.image
-                }
-                style={styles.tripImage}
-              />
+              <Image source={trip.image} style={styles.tripImage} />
               <View style={styles.tripInfo}>
                 <Text style={styles.tripTitle}>{trip.title}</Text>
                 <View style={styles.tripDate}>
                   <Ionicons name="calendar-outline" size={16} color="#6b7280" />
                   <Text style={styles.tripDateText}>
-                    {new Date(trip.startDate).toLocaleDateString()} -{" "}
-                    {new Date(trip.endDate).toLocaleDateString()}
+                    {new Date(trip.startDate).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                    })}{" "}
+                    -{" "}
+                    {new Date(trip.endDate).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                    })}
                   </Text>
                 </View>
                 <View style={styles.tripBadge}>

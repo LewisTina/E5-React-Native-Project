@@ -10,6 +10,12 @@ class UserServices {
       required_auth: true,
     });
 
+  static getTripById = (id: string) =>
+    BaseServices.getRequest({
+      url: `${UserUrl.GET_TRIPS}/${id}`,
+      required_auth: true,
+    });
+
   static getUpcomingTrips = () =>
     BaseServices.getRequest({
       url: UserUrl.GET_UPCOMING_TRIPS,
