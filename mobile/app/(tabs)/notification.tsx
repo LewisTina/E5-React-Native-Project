@@ -131,6 +131,8 @@ export default function NotificationScreen() {
     setTestResults([]);
   };
 
+  const [showMore, setShowMore] = useState(false);
+
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
@@ -273,11 +275,31 @@ export default function NotificationScreen() {
             </View>
           ) : (
             <View style={styles.resultsContainer}>
-              {testResults.map((result, index) => (
-                <View key={index} style={styles.resultItem}>
+              {(testResults.length > 4 && !showMore
+                ? testResults.slice(testResults.length - 4, testResults.length)
+                : testResults
+              ).map((result, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.resultItem,
+                    index === 0 ? styles.isFirstResultItem : {},
+                  ]}
+                >
                   <Text style={styles.resultText}>{result}</Text>
                 </View>
               ))}
+
+              {testResults.length > 4 && (
+                <TouchableOpacity
+                  onPress={() => setShowMore(!showMore)}
+                  style={{ marginTop: 12, alignSelf: "center" }}
+                >
+                  <Text style={styles.clearButton}>
+                    {showMore ? "Voir moins" : "Voir plus"}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -450,8 +472,11 @@ const styles = StyleSheet.create({
   },
   resultItem: {
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+  },
+  isFirstResultItem: {
+    borderTopWidth: 0,
   },
   resultText: {
     fontSize: 12,
