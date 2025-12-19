@@ -9,8 +9,11 @@ import {
   View,
 } from "react-native";
 
+import { useActivities, useTrips } from "@/hooks/use-api-fetch";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export const IMAGES_SOURCES = {
@@ -20,46 +23,45 @@ export const IMAGES_SOURCES = {
 };
 
 export default function HomeScreen() {
-  const stats = [
-    { label: "Trips", value: 12, icon: "airplane-outline" },
-    { label: "Photos", value: 240, icon: "camera-outline" },
-    { label: "Countries", value: 20, icon: "globe-outline" },
-  ] as const;
+  const router = useRouter();
+  const { retrieveUpcomingTrips, retrieveStatistics } = useTrips();
+  const { retrieveActivities } = useActivities();
+  const { data: statisticsDatas, isLoading: statisticsLoading } = useQuery({
+    queryKey: ["statistics"],
+    queryFn: retrieveStatistics,
+  });
+  const { data: upcomingTripsDatas, isLoading: upcomingTripsLoading } =
+    useQuery({
+      queryKey: ["upcomingTrips"],
+      queryFn: retrieveUpcomingTrips,
+    });
 
-  const upcomingTrips = [
+  const { data: activitiesDatas, isLoading: activitiesLoading } = useQuery({
+    queryKey: ["activities"],
+    queryFn: retrieveActivities,
+  });
+
+  const stats: {
+    label: string;
+    value: number;
+    icon: keyof typeof Ionicons.glyphMap;
+  }[] = [
     {
-      id: "1",
-      title: "Trip to Paris",
-      date: "10-20 Dec",
-      daysLeft: 8,
-      image: "paris",
+      label: "Trips",
+      value: statisticsDatas?.data?.totalTrips || 0,
+      icon: "airplane-outline",
     },
     {
-      id: "2",
-      title: "Trip to Tokyo",
-      date: "10-15 Jan",
-      daysLeft: 29,
-      image: "tokyo",
+      label: "Photos",
+      value: statisticsDatas?.data?.totalPhotos || 0,
+      icon: "camera-outline",
+    },
+    {
+      label: "Countries",
+      value: statisticsDatas?.data?.totalCountries || 0,
+      icon: "globe-outline",
     },
   ];
-
-  const activities = [
-    {
-      icon: "walk-outline",
-      text: "Went for a walk in the park",
-      time: "2 hours ago",
-    },
-    {
-      icon: "camera-outline",
-      text: 'Added 5 new photos to "Summer Trip"',
-      time: "1 day ago",
-    },
-    {
-      icon: "airplane-outline",
-      text: "Booked a flight to New York",
-      time: "3 days ago",
-    },
-  ] as const;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -71,7 +73,10 @@ export default function HomeScreen() {
               <Text style={styles.greentingText}>Hello</Text>
               <Text style={styles.firstnameText}>Odilon!</Text>
             </View>
-            <TouchableOpacity style={styles.notificationBtn}>
+            <TouchableOpacity
+              style={styles.notificationBtn}
+              onPress={() => router.replace("/(tabs)/notification")}
+            >
               <Ionicons
                 name="notifications-outline"
                 size={24}
@@ -104,36 +109,51 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Upcoming Trips</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => router.replace("/(tabs)/trips")}>
                 <Text style={styles.homeSeeAllBtn}>See All</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {upcomingTrips.map((trip) => (
-          <TouchableOpacity key={trip.id} style={styles.tripCard}>
-            <Image
-              source={
-                IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES] ||
-                trip.image
-              }
-              style={styles.tripImage}
-            />
-            <View style={styles.tripInfo}>
-              <Text style={styles.tripTitle}>{trip.title}</Text>
-              <View style={styles.tripDate}>
-                <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                <Text style={styles.tripDateText}>{trip.date}</Text>
+        {upcomingTripsDatas?.data?.map((trip) => {
+          const dayLeft = Math.ceil(
+            (new Date(trip.startDate).getTime() - new Date().getTime()) /
+              (1000 * 60 * 60 * 24),
+          );
+          return (
+            <TouchableOpacity key={trip.title} style={styles.tripCard}>
+              <Image
+                source={
+                  IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES] ||
+                  trip.image
+                }
+                style={styles.tripImage}
+              />
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripTitle}>{trip.title}</Text>
+                <View style={styles.tripDate}>
+                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                  <Text style={styles.tripDateText}>
+                    {new Date(trip.startDate).toLocaleDateString()} -{" "}
+                    {new Date(trip.endDate).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.tripBadge}>
+                  <Text style={styles.tripBadgeText}>
+                    {dayLeft < 0
+                      ? "Passé de " + Math.abs(dayLeft) + " jours"
+                      : dayLeft === 0
+                        ? "Aujourd'hui"
+                        : dayLeft === 1
+                          ? "Demain"
+                          : `${dayLeft} jours`}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.tripBadge}>
-                <Text style={styles.tripBadgeText}>
-                  Dans {trip.daysLeft} jours{" "}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          );
+        })}
 
         {/* Quick Actions */}
         <View style={styles.section}>
@@ -181,10 +201,16 @@ export default function HomeScreen() {
               Recent Activity
             </Text>
 
-            {activities.map((activity, idx) => (
+            {activitiesDatas?.data?.map((activity, idx) => (
               <View style={styles.activityCard} key={idx}>
                 <Text style={styles.activityIcon}>
-                  <Ionicons name={activity.icon} size={24} color="#6b7280" />
+                  <Ionicons
+                    name={
+                      `${activity.type}-outline` as keyof typeof Ionicons.glyphMap
+                    }
+                    size={24}
+                    color="#6b7280"
+                  />
                 </Text>
                 <View>
                   <Text style={styles.activityText}>{activity.text}</Text>

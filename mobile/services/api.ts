@@ -1,15 +1,6 @@
+import Trip from "@/types/trip";
 import { config } from "@/utils/env";
 import { OFFLINE } from "./offline";
-
-interface Trip {
-  title: string;
-  destination: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  image?: string;
-  photos?: string[];
-}
 
 export const API = {
   async uploadImage(uri: string): Promise<string> {

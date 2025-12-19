@@ -1,3 +1,5 @@
+import { Activity } from "@/types/activities";
+import { TripStatistics } from "@/types/trip";
 import { config } from "@/utils/env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -5,6 +7,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const STORAGE_KEYS = {
   OFFLINE_QUEUE: "@offline_queue",
   CACHED_TRIPS: "@cached_trips",
+  CACHED_STATISTICS: "@cached_statistics",
+  CACHED_ACTIVITIES: "@cached_activities",
 };
 
 // Types
@@ -114,7 +118,8 @@ const syncQueue = async (): Promise<{ synced: number; failed: number }> => {
 
 // cache trips
 
-const cacheTrips = async (trips: Trip[]): Promise<void> => {
+const cacheTrips = async (trips?: Trip[]): Promise<void> => {
+  if (!trips) return;
   await AsyncStorage.setItem(
     STORAGE_KEYS.CACHED_TRIPS,
     JSON.stringify({
@@ -124,13 +129,53 @@ const cacheTrips = async (trips: Trip[]): Promise<void> => {
   );
 };
 
-const getCachedTrips = async (): Promise<Trip[] | null> => {
+const cachedStatistics = async (statistics?: TripStatistics): Promise<void> => {
+  if (!statistics) return;
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.CACHED_STATISTICS,
+    JSON.stringify({
+      data: statistics,
+      cachedAt: Date.now(),
+    }),
+  );
+};
+
+const cacheActivities = async (activities?: Activity[]): Promise<void> => {
+  if (!activities) return;
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.CACHED_ACTIVITIES,
+    JSON.stringify({
+      data: activities,
+      cachedAt: Date.now(),
+    }),
+  );
+};
+
+const getCachedTrips = async (): Promise<Trip[] | undefined> => {
   const stored = await AsyncStorage.getItem(STORAGE_KEYS.CACHED_TRIPS);
   if (stored) {
     const { data } = JSON.parse(stored);
     return data;
   }
-  return null;
+  return undefined;
+};
+
+const getCachedStatistics = async (): Promise<TripStatistics | undefined> => {
+  const stored = await AsyncStorage.getItem(STORAGE_KEYS.CACHED_STATISTICS);
+  if (stored) {
+    const { data } = JSON.parse(stored);
+    return data;
+  }
+  return undefined;
+};
+
+const getCachedActivities = async (): Promise<Activity[] | undefined> => {
+  const stored = await AsyncStorage.getItem(STORAGE_KEYS.CACHED_ACTIVITIES);
+  if (stored) {
+    const { data } = JSON.parse(stored);
+    return data;
+  }
+  return undefined;
 };
 
 export const OFFLINE = {
@@ -141,4 +186,8 @@ export const OFFLINE = {
   syncQueue,
   cacheTrips,
   getCachedTrips,
+  cachedStatistics,
+  getCachedStatistics,
+  cacheActivities,
+  getCachedActivities,
 };

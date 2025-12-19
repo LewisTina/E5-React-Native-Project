@@ -35,6 +35,11 @@ il est configuré pour tourner sur le port 4000 du localhost [http://localhost:4
 
 Configuré pour tourner par défaut d'après EXPO sur le port 8081 du localhost [http://localhost:8081](http://localhost:8081).
 
+## Décisions
+
+Utilisation de `prettier` pour formatter de manière uniforme tous les fichiers
+Centralisation des services `GET, POST, DELETE, PUT` avec vérification d'authentification nécessaire ou pas avec un base services afin de construire les en-têtes de requêtes de façon standard
+
 ## Stack Technique
 
 **Client:** React-Native, Expo

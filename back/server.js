@@ -36,7 +36,20 @@ function loadTrips() {
 function saveTrips(trips) {
   fs.writeFileSync(DB_PATH, JSON.stringify(trips, null, 2), "utf8");
 }
+
+function loadActivities() {
+  const activitiesPath = path.join(__dirname, "data", "activities.json");
+  try {
+    const raw = fs.readFileSync(activitiesPath, "utf8");
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn("No activities.json found, starting empty activities.");
+    return [];
+  }
+}
+
 let trips = loadTrips();
+let activities = loadActivities();
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -188,7 +201,37 @@ app.post("/auth/logout", authenticateToken, (req, res) => {
 });
 
 app.get("/trips", authenticateToken, (req, res) => {
-  return res.json(trips);
+  return res.json({
+    data: trips,
+  });
+});
+
+app.get("/activities", authenticateToken, (req, res) => {
+  return res.json({
+    data: activities,
+  });
+});
+
+app.get("/trips/upcoming", authenticateToken, (req, res) => {
+  return res.json({
+    data: trips.slice(0, 3),
+  });
+});
+
+app.get("/stats", authenticateToken, (req, res) => {
+  const totalTrips = trips.length;
+  const totalPhotos = trips.reduce((sum, trip) => sum + trip.photos.length, 0);
+  const totalCountries = new Set(
+    trips.map((trip) => trip.destination.split(",")[1]),
+  ).size;
+
+  return res.json({
+    data: {
+      totalTrips,
+      totalPhotos,
+      totalCountries,
+    },
+  });
 });
 
 app.post("/trips", authenticateToken, (req, res) => {

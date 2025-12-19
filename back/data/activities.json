@@ -1,0 +1,17 @@
+[
+  {
+    "type": "walk",
+    "text": "Went for a walk in the park",
+    "time": "2 hours ago"
+  },
+  {
+    "type": "camera",
+    "text": "Added 5 new photos to \"Summer Trip\"",
+    "time": "1 day ago"
+  },
+  {
+    "type": "airplane",
+    "text": "Booked a flight to New York",
+    "time": "3 days ago"
+  }
+]

@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useOffline } from "@/hooks/use-offline";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -20,11 +21,11 @@ export const unstable_settings = {
 
 function RootLayoutContent() {
   const colorScheme = useColorScheme();
-  const { isOnline, pendingCount, isSyncing, syncNow } = useOffline();
+  const { isOnline, pendingCount, isSyncing } = useOffline();
   const { isAuthenticated, isLoading, refreshAuth } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-
+  const queryClient = new QueryClient();
   // check auth
   useEffect(() => {
     if (isLoading) {
@@ -45,48 +46,50 @@ function RootLayoutContent() {
     if (segments[0] === "(tabs)" && !isLoading && !isAuthenticated) {
       refreshAuth();
     }
-  }, [segments, isLoading, isAuthenticated, router]);
+  }, [segments, isLoading, isAuthenticated, router, refreshAuth]);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      {/*Banner Offline*/}
-      {!isOnline && (
-        <View style={styles.offlineBanner}>
-          <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
-          <Text style={styles.bannerText}>
-            Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
-          </Text>
-        </View>
-      )}
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        {/*Banner Offline*/}
+        {!isOnline && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+            <Text style={styles.bannerText}>
+              Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
+            </Text>
+          </View>
+        )}
 
-      {/*Banner Sync */}
+        {/*Banner Sync */}
 
-      {isOnline && pendingCount > 0 && (
-        <TouchableOpacity>
-          <Ionicons
-            name={isSyncing ? "sync" : "sync-outline"}
-            size={16}
-            color="#fff"
+        {isOnline && pendingCount > 0 && (
+          <TouchableOpacity>
+            <Ionicons
+              name={isSyncing ? "sync" : "sync-outline"}
+              size={16}
+              color="#fff"
+            />
+            E
+            <Text style={styles.bannerText}>
+              {isSyncing
+                ? "Synchronisation..."
+                : `Synchroniser ${pendingCount} action(s)`}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <Stack>
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
           />
-          E
-          <Text style={styles.bannerText}>
-            {isSyncing
-              ? "Synchronisation..."
-              : `Synchroniser ${pendingCount} action(s)`}
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
