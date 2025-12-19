@@ -8,7 +8,7 @@ export const UserUrl = {
 
   /* Trips */
   GET_TRIPS: `${basUrl}/trips`,
-  GET_UPCOMING_TRIPS: `${basUrl}/trips/upcoming`,
+  GET_UPCOMING_TRIPS: `${basUrl}/trips-upcoming`,
   GET_STATS: `${basUrl}/stats`,
 
   /* Activities */

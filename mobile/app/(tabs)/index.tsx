@@ -114,7 +114,16 @@ export default function HomeScreen() {
               (1000 * 60 * 60 * 24),
           );
           return (
-            <TouchableOpacity key={trip.title} style={styles.tripCard}>
+            <TouchableOpacity
+              key={trip.title}
+              style={styles.tripCard}
+              onPress={() =>
+                router.push({
+                  pathname: "/trips/[id]",
+                  params: { id: trip.id, from: "trips" },
+                })
+              }
+            >
               <Image source={trip.image} style={styles.tripImage} />
               <View style={styles.tripInfo}>
                 <Text style={styles.tripTitle}>{trip.title}</Text>

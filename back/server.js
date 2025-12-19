@@ -221,7 +221,7 @@ app.get("/activities", authenticateToken, (req, res) => {
   });
 });
 
-app.get("/trips/upcoming", authenticateToken, (req, res) => {
+app.get("/trips-upcoming", authenticateToken, (req, res) => {
   return res.json({
     data: trips.slice(0, 3),
   });

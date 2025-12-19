@@ -146,7 +146,6 @@ export function useActivities() {
             return response;
           },
         );
-        console.log(activities);
         await OFFLINE.cacheActivities(activities.data);
         return activities;
       } catch (error) {

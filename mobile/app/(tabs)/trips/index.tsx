@@ -110,7 +110,6 @@ export default function TabTwoScreen() {
         {/* Trips List */}
         <View style={styles.tripsList}>
           {filteredTrips?.map((trip) => {
-            console.log(trip.image);
             return (
               <TouchableOpacity
                 key={trip.title}
