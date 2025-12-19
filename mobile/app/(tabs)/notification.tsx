@@ -51,7 +51,7 @@ export default function NotificationScreen() {
 
   useEffect(() => {
     refreshScheduled();
-  });
+  }, [refreshScheduled]);
 
   const handleInitialize = async () => {
     addTestResult("🔄 Initialisation des notifications ...");
@@ -83,7 +83,7 @@ export default function NotificationScreen() {
     date.setSeconds(date.getSeconds() + 5);
 
     try {
-      const id = await schedule(
+      await schedule(
         "Notification Programmée",
         "Cette notification apparaîtra dans 5 secondes",
         date,
@@ -103,7 +103,7 @@ export default function NotificationScreen() {
     date.setSeconds(date.getSeconds() + 30);
 
     try {
-      const id = await schedule(
+      await schedule(
         "Rappel de voyage",
         "Cette notification apparaîtra dans 30 secondes",
         date,
@@ -452,7 +452,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    maxHeight: 300,
   },
   resultItem: {
     paddingVertical: 8,

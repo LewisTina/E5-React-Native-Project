@@ -1,8 +1,5 @@
-import {
-  NotificationPreferences,
-  notifications,
-  PushToken,
-} from "@/services/notification";
+import { notifications } from "@/services/notification";
+import { NotificationPreferences, PushToken } from "@/types/notifications";
 import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -22,13 +19,7 @@ export const useNotifications = (
 
   const cleanupRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    loadData();
-    setupListeners();
-    return () => cleanupRef.current?.();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [token, prefs, badge, scheduledList] = await Promise.all([
         notifications.getToken(),
@@ -45,14 +36,20 @@ export const useNotifications = (
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const setupListeners = () => {
+  const setupListeners = useCallback(() => {
     cleanupRef.current = notifications.setupListeners(
       (n) => onReceived?.(n),
       (r) => onTapped?.(r.notification.request.content.data),
     );
-  };
+  }, [onReceived, onTapped]);
+
+  useEffect(() => {
+    loadData();
+    setupListeners();
+    return () => cleanupRef.current?.();
+  }, [loadData, setupListeners]);
 
   const initialize = useCallback(async () => {
     setIsLoading(true);
@@ -72,13 +69,18 @@ export const useNotifications = (
     return notifications.send(title, body, data);
   }, []);
 
+  const refreshScheduled = useCallback(async () => {
+    const list = await notifications.getScheduled();
+    setScheduled(list);
+  }, []);
+
   const schedule = useCallback(
     async (title: string, body: string, date: Date, data?: any) => {
       const id = await notifications.schedule(title, body, date, data);
       await refreshScheduled();
       return id;
     },
-    [],
+    [refreshScheduled],
   );
 
   const scheduleTripReminder = useCallback(
@@ -87,17 +89,20 @@ export const useNotifications = (
       await refreshScheduled();
       return id_;
     },
-    [],
+    [refreshScheduled],
   );
 
-  const cancel = useCallback(async (id: string) => {
-    await notifications.cancel(id);
-    await refreshScheduled();
-  }, []);
+  const cancel = useCallback(
+    async (id: string) => {
+      await notifications.cancel(id);
+      await refreshScheduled();
+    },
+    [refreshScheduled],
+  );
 
   const cancelAll = useCallback(async () => {
     await notifications.cancelAll();
-    await setScheduled([]);
+    setScheduled([]);
   }, []);
 
   const updatePreferences = useCallback(
@@ -118,11 +123,6 @@ export const useNotifications = (
   const clearBadge = useCallback(async () => {
     await notifications.clearBadge();
     setBadgeCount(0);
-  }, []);
-
-  const refreshScheduled = useCallback(async () => {
-    const list = await notifications.getScheduled();
-    setScheduled(list);
   }, []);
 
   return {

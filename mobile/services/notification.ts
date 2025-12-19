@@ -1,26 +1,9 @@
+import { NotificationPreferences, PushToken } from "@/types/notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-
-// Types
-export interface PushToken {
-  token: string;
-  platform: "ios" | "android";
-  deviceId?: string;
-  createdAt: number;
-}
-
-export interface NotificationPreferences {
-  enabled: boolean;
-  tripReminders: boolean;
-  newMessages: boolean;
-  promotions: boolean;
-  sound: boolean;
-}
-
-// Constants
 
 const KEYS = {
   PUSH_TOKEN: "@push_token",
@@ -35,29 +18,24 @@ const DEFAULT_PREFS: NotificationPreferences = {
   sound: true,
 };
 
-// Config
+const logData = __DEV__ ? console.log : () => {};
+const raiseWarning = __DEV__ ? console.warn : () => {};
 
-Notifications.setNotificationHandler({
+const NOTIFICATION_HANDLER: Notifications.NotificationHandler = {
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
-});
+};
 
-// Notifications services
+Notifications.setNotificationHandler(NOTIFICATION_HANDLER);
 
 export const notifications = {
   async initialize(): Promise<PushToken | null> {
     const isSimulator = !Device.isDevice;
 
-    if (isSimulator) {
-      console.log(
-        "Running on simulator - local notifications will work, but push tokens require a physical device",
-      );
-    }
     const { status: existingStatus } =
       await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -68,14 +46,11 @@ export const notifications = {
     }
 
     if (finalStatus !== "granted") {
-      console.warn("Push permission not granted");
+      raiseWarning("[notifications] Permission not granted");
       return null;
     }
 
-    if (Platform.OS == "android") {
-      await this.createAndroidChannels();
-    }
-
+    // Simulator mode: no real push token
     if (isSimulator) {
       const mockToken: PushToken = {
         token: "SIMULATOR_MOCK_TOKEN",
@@ -85,8 +60,14 @@ export const notifications = {
       };
 
       await AsyncStorage.setItem(KEYS.PUSH_TOKEN, JSON.stringify(mockToken));
-      console.log("Simulator mode: Using mock token.");
+
+      logData("[notifications] Simulator mode – mock token used");
       return mockToken;
+    }
+
+    // Android channels (device only)
+    if (Platform.OS === "android") {
+      await this.createAndroidChannels();
     }
 
     try {
@@ -103,12 +84,20 @@ export const notifications = {
       };
 
       await AsyncStorage.setItem(KEYS.PUSH_TOKEN, JSON.stringify(pushToken));
+
       return pushToken;
     } catch (error) {
-      console.error("Get push token error:", error);
+      raiseWarning(`[notifications] Failed to get push token ${error}`);
       return null;
     }
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Android channels
+  |--------------------------------------------------------------------------
+  */
+
   async createAndroidChannels(): Promise<void> {
     await Notifications.setNotificationChannelAsync("default", {
       name: "Default",
@@ -116,34 +105,72 @@ export const notifications = {
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#a855f7",
     });
+
     await Notifications.setNotificationChannelAsync("reminders", {
       name: "Rappels de voyage",
       importance: Notifications.AndroidImportance.HIGH,
     });
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Token & preferences
+  |--------------------------------------------------------------------------
+  */
+
   async getToken(): Promise<PushToken | null> {
     const stored = await AsyncStorage.getItem(KEYS.PUSH_TOKEN);
     return stored ? JSON.parse(stored) : null;
   },
+
+  async getPreferences(): Promise<NotificationPreferences> {
+    const stored = await AsyncStorage.getItem(KEYS.PREFERENCES);
+    return stored ? JSON.parse(stored) : DEFAULT_PREFS;
+  },
+
+  async savePreferences(prefs: NotificationPreferences): Promise<void> {
+    await AsyncStorage.setItem(KEYS.PREFERENCES, JSON.stringify(prefs));
+  },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Notifications (local)
+  |--------------------------------------------------------------------------
+  */
+
   async send(
     title: string,
     body: string,
-    data?: Record<string, any>,
+    data?: Record<string, unknown>,
   ): Promise<string> {
     return Notifications.scheduleNotificationAsync({
-      content: { title, body, data: data || {}, sound: "default" },
+      content: {
+        title,
+        body,
+        data: data ?? {},
+        sound: "default",
+      },
       trigger: null,
     });
   },
+
   async schedule(
     title: string,
     body: string,
     date: Date,
-    data?: Record<string, any>,
+    data?: Record<string, unknown>,
   ): Promise<string> {
     return Notifications.scheduleNotificationAsync({
-      content: { title, body, data: data || {}, sound: "default" },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+      content: {
+        title,
+        body,
+        data: data ?? {},
+        sound: "default",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date,
+      },
     });
   },
 
@@ -158,7 +185,7 @@ export const notifications = {
     reminderDate.setHours(9, 0, 0, 0);
 
     if (reminderDate <= new Date()) {
-      console.warn("Reminder date is in the past");
+      raiseWarning("[notifications] Reminder date is in the past");
       return "";
     }
 
@@ -169,6 +196,12 @@ export const notifications = {
       { id, type: "trip_reminder" },
     );
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Management
+  |--------------------------------------------------------------------------
+  */
 
   async cancel(id: string): Promise<void> {
     await Notifications.cancelScheduledNotificationAsync(id);
@@ -181,36 +214,38 @@ export const notifications = {
   async getScheduled(): Promise<Notifications.NotificationRequest[]> {
     return Notifications.getAllScheduledNotificationsAsync();
   },
+
   async setBadge(count: number): Promise<void> {
     await Notifications.setBadgeCountAsync(count);
   },
+
   async getBadge(): Promise<number> {
     return Notifications.getBadgeCountAsync();
   },
+
   async clearBadge(): Promise<void> {
     await Notifications.setBadgeCountAsync(0);
   },
-  async getPreferences(): Promise<NotificationPreferences> {
-    const stored = await AsyncStorage.getItem(KEYS.PREFERENCES);
-    return stored ? JSON.parse(stored) : DEFAULT_PREFS;
-  },
-  async savePreferences(prefs: NotificationPreferences): Promise<void> {
-    await AsyncStorage.setItem(KEYS.PREFERENCES, JSON.stringify(prefs));
-  },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Listeners
+  |--------------------------------------------------------------------------
+  */
 
   setupListeners(
     onReceived?: (notification: Notifications.Notification) => void,
     onTapped?: (response: Notifications.NotificationResponse) => void,
   ): () => void {
-    const receivedSub = Notifications.addNotificationReceivedListener((n) => {
-      console.log("Notification received:", n);
-      onReceived?.(n);
-    });
+    const receivedSub = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        onReceived?.(notification);
+      },
+    );
 
     const responseSub = Notifications.addNotificationResponseReceivedListener(
-      (r) => {
-        console.log("Notification tapped:", r);
-        onTapped?.(r);
+      (response) => {
+        onTapped?.(response);
       },
     );
 
