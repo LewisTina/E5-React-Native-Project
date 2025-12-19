@@ -24,31 +24,23 @@ export const unstable_settings = {
 function RootLayoutContent() {
   const colorScheme = useColorScheme();
   const { isOnline, pendingCount, isSyncing } = useOffline();
-  const { isAuthenticated, isLoading, refreshAuth } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = new QueryClient();
-  // check auth
-  useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-    const inAuthGroup = segments[0] === "(tabs)" || segments[0] === "modal";
-    const isLoginpage = segments[0] === "login";
-    if (!isAuthenticated && inAuthGroup) {
-      return router.replace("/login");
-    } else if (isAuthenticated && isLoginpage) {
-      return router.replace("/(tabs)");
-    } else {
-      console.log("✅ [ROUTER] Route access granted");
-    }
-  }, [segments, isLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (segments[0] === "(tabs)" && !isLoading && !isAuthenticated) {
-      refreshAuth();
+    if (isLoading) return;
+
+    if (!isAuthenticated && segments[0] !== "login") {
+      router.replace("/login");
+      return;
     }
-  }, [segments, isLoading, isAuthenticated, router, refreshAuth]);
+
+    if (isAuthenticated && segments[0] === "login") {
+      router.replace("/(tabs)");
+    }
+  }, [isAuthenticated, isLoading, segments, router]);
 
   return (
     <Provider store={store}>
@@ -67,7 +59,6 @@ function RootLayoutContent() {
           )}
 
           {/*Banner Sync */}
-
           {isOnline && pendingCount > 0 && (
             <TouchableOpacity>
               <Ionicons
@@ -75,7 +66,6 @@ function RootLayoutContent() {
                 size={16}
                 color="#fff"
               />
-              E
               <Text style={styles.bannerText}>
                 {isSyncing
                   ? "Synchronisation..."
