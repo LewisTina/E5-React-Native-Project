@@ -1,8 +1,9 @@
+import Input from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 import { useState } from "react";
+import { FieldValues, useForm } from "react-hook-form";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -10,23 +11,20 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
-  const router = useRouter();
   const { login, register, isLoading, refreshAuth } = useAuth();
 
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [showPassword, setshowPassword] = useState(false);
+  const { control, handleSubmit } = useForm();
 
-  const handleSubmit = async () => {
+  const onSubmit = async (bodyData: FieldValues) => {
+    const { email, password, name } = bodyData;
     if (!email || !password) {
       Alert.alert("Erreur", "Veuillez remplir tous les champs");
       return;
@@ -40,18 +38,11 @@ export default function LoginScreen() {
     try {
       if (isLoginMode) {
         await login({ email, password });
-
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        await refreshAuth();
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        router.replace("/(tabs)");
       } else {
-        await register({ email, password, name });
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        await refreshAuth();
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        router.replace("/(tabs)");
+        await register({ name, email, password });
       }
+
+      await refreshAuth();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Une erreur est survenue";
@@ -61,144 +52,130 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.keyboardView}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsHorizontalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
+        <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
+          <SafeAreaView edges={["top", "bottom"]}>
             <Text style={styles.headerTitle}>
               {isLoginMode
                 ? "Connectez-vous à votre compte"
                 : "Créez un nouveau compte"}
             </Text>
-          </LinearGradient>
-          <View style={styles.form}>
-            {!isLoginMode && (
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="person-outline"
-                  size={24}
-                  color="#6b7280"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nom complet"
-                  placeholderTextColor="#9ca3af"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                  editable={!isLoading}
-                />
-              </View>
-            )}
-
+          </SafeAreaView>
+        </LinearGradient>
+        <View style={styles.form}>
+          {!isLoginMode && (
             <View style={styles.inputContainer}>
               <Ionicons
-                name="mail-outline"
+                name="person-outline"
                 size={24}
                 color="#6b7280"
                 style={styles.inputIcon}
               />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#9ca3af"
-                value={email}
-                keyboardType="email-address"
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                editable={!isLoading}
+              <Input
+                name="name"
+                placeholder="Nom complet"
+                controller={control}
               />
             </View>
+          )}
 
-            <View>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={24}
+              color="#6b7280"
+              style={styles.inputIcon}
+            />
+            <Input
+              name="email"
+              placeholder="Email"
+              keyboardType="email-address"
+              controller={control}
+              editable={!isLoading}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={24}
+              color="#6b7280"
+              style={styles.inputIcon}
+            />
+            <Input
+              name="password"
+              placeholder="Mot de passe"
+              controller={control}
+              secureTextEntry={!showPassword}
+              autocapitalize="none"
+              editable={!isLoading}
+            />
+
+            <TouchableOpacity
+              onPress={() => setshowPassword(!showPassword)}
+              style={styles.eyeButton}
+              hitSlop={10}
+            >
               <Ionicons
-                name="lock-closed-outline"
-                size={24}
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
                 color="#6b7280"
-                style={styles.inputIcon}
               />
-              <TextInput
-                style={styles.input}
-                placeholder="Mot de passe"
-                placeholderTextColor="#9ca3af"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-                autoCapitalize="none"
-                editable={!isLoading}
-              />
-
-              <TouchableOpacity
-                onPress={() => setshowPassword(!showPassword)}
-                style={styles.eyeButton}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={24}
-                  color="#fff"
-                />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              onPress={handleSubmit}
-              style={[
-                styles.submitButton,
-                isLoading && styles.submitButtonDisabled,
-              ]}
-              disabled={isLoading}
-            >
-              <LinearGradient
-                colors={["#a855f7", "#ec4899"]}
-                style={styles.submitButtonGradient}
-              >
-                {isLoading ? (
-                  <Text style={styles.submitButtonText}>Chargement...</Text>
-                ) : (
-                  <Text style={styles.submitButtonText}>
-                    {isLoginMode ? "Se connecter" : "S'inscrire"}
-                  </Text>
-                )}
-              </LinearGradient>
             </TouchableOpacity>
+          </View>
 
-            <TouchableOpacity
-              onPress={() => setIsLoginMode(!isLoginMode)}
-              style={styles.switchModeButton}
-              disabled={isLoading}
+          <TouchableOpacity
+            onPress={handleSubmit(onSubmit)}
+            style={[
+              styles.submitButton,
+              isLoading && styles.submitButtonDisabled,
+            ]}
+            disabled={isLoading}
+          >
+            <LinearGradient
+              colors={["#a855f7", "#ec4899"]}
+              style={styles.submitButtonGradient}
             >
-              <Text style={styles.switchModeText}>
-                {isLoginMode
-                  ? "Pas encore de compte ? S'inscrire"
-                  : "Déjà un compte ? Se connecter"}
+              {isLoading ? (
+                <Text style={styles.submitButtonText}>Chargement...</Text>
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {isLoginMode ? "Se connecter" : "S'inscrire"}
+                </Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setIsLoginMode(!isLoginMode)}
+            style={styles.switchModeButton}
+            disabled={isLoading}
+          >
+            <Text style={styles.switchModeText}>
+              {isLoginMode
+                ? "Pas encore de compte ? S'inscrire"
+                : "Déjà un compte ? Se connecter"}
+            </Text>
+          </TouchableOpacity>
+
+          {isLoginMode && (
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>
+                Mot de passe oublié ?
               </Text>
             </TouchableOpacity>
-
-            {isLoginMode && (
-              <TouchableOpacity style={styles.forgotPasswordButton}>
-                <Text style={styles.forgotPasswordText}>
-                  Mot de passe oublié ?
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

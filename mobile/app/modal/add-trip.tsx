@@ -1,3 +1,4 @@
+import Input from "@/components/ui/input";
 import { useTrips } from "@/hooks/use-api-fetch";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -15,7 +16,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -167,32 +167,6 @@ export default function AddTripModal() {
     });
   };
 
-  const Input = (props: {
-    name: string;
-    controller: typeof control;
-    placeholder: string;
-    className?: object;
-    multiline?: boolean;
-    numberOfLines?: number;
-  }) => {
-    const { field } = useController({
-      name: props.name,
-      control: props.controller,
-      defaultValue: "",
-    });
-    return (
-      <TextInput
-        style={[styles.input, props.className ? props.className : {}]}
-        placeholder={props.placeholder}
-        value={field.value}
-        onChangeText={field.onChange}
-        multiline={props.multiline ? true : false}
-        numberOfLines={props.numberOfLines ? props.numberOfLines : 1}
-        placeholderTextColor="#9ca3af"
-        textAlignVertical="top"
-      />
-    );
-  };
   const { field: fieldEndDate } = useController({
     name: "endDate",
     control: control,
