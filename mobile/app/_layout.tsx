@@ -1,17 +1,21 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useOffline } from '@/hooks/use-offline';
-import { useEffect } from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
-import { useAuth, AuthProvider } from '@/contexts/auth-context';
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useOffline } from "@/hooks/use-offline";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useEffect } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 function RootLayoutContent() {
@@ -21,39 +25,34 @@ function RootLayoutContent() {
   const segments = useSegments();
   const router = useRouter();
 
-
   // check auth
   useEffect(() => {
     if (isLoading) {
       return;
     }
-    const inAuthGroup = segments[0] === '(tabs)' || segments[0] === 'modal';
-    const isLoginpage = segments[0] === 'login';
+    const inAuthGroup = segments[0] === "(tabs)" || segments[0] === "modal";
+    const isLoginpage = segments[0] === "login";
     if (!isAuthenticated && inAuthGroup) {
-      return router.replace('/login');
+      return router.replace("/login");
     } else if (isAuthenticated && isLoginpage) {
-      return router.replace('/(tabs)');
-
+      return router.replace("/(tabs)");
     } else {
-      console.log('✅ [ROUTER] Route access granted');
-
+      console.log("✅ [ROUTER] Route access granted");
     }
+  }, [segments, isLoading, isAuthenticated, router]);
 
-  }, [segments, isLoading, isAuthenticated, router])
-
-
-    useEffect(() => {
-      if (segments[0] === '(tabs)' && ! isLoading && !isAuthenticated) {
-        refreshAuth();
-      }
-  }, [segments, isLoading, isAuthenticated, router])
+  useEffect(() => {
+    if (segments[0] === "(tabs)" && !isLoading && !isAuthenticated) {
+      refreshAuth();
+    }
+  }, [segments, isLoading, isAuthenticated, router]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       {/*Banner Offline*/}
       {!isOnline && (
         <View style={styles.offlineBanner}>
-          <Ionicons name='cloud-offline-outline' size={16} color='#fff' />
+          <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
           <Text style={styles.bannerText}>
             Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
           </Text>
@@ -68,10 +67,11 @@ function RootLayoutContent() {
             name={isSyncing ? "sync" : "sync-outline"}
             size={16}
             color="#fff"
-          />E
+          />
+          E
           <Text style={styles.bannerText}>
             {isSyncing
-              ? 'Synchronisation...'
+              ? "Synchronisation..."
               : `Synchroniser ${pendingCount} action(s)`}
           </Text>
         </TouchableOpacity>
@@ -80,47 +80,46 @@ function RootLayoutContent() {
       <Stack>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", title: "Modal" }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
 
-
-
 const styles = StyleSheet.create({
   offlineBanner: {
-    backgroundColor: '#ef4444',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#ef4444",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 8,
     paddingTop: 50,
     gap: 8,
   },
   syncBanner: {
-    backgroundColor: '#f59e0b',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#f59e0b",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 8,
     paddingTop: 50,
     gap: 8,
   },
   bannerText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '600'
-  }
+    fontWeight: "600",
+  },
 });
-
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-        <RootLayoutContent />
+      <RootLayoutContent />
     </AuthProvider>
   );
-  
 }

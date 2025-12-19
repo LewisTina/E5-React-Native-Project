@@ -1,58 +1,56 @@
-import { useCallback, useEffect, useState } from "react";
-import NetInfo from '@react-native-community/netinfo'
 import { OFFLINE } from "@/services/offline";
+import NetInfo from "@react-native-community/netinfo";
+import { useCallback, useEffect, useState } from "react";
 
 export const useOffline = () => {
+  const [isOnline, setIsOnline] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-    const [isOnline, setIsOnline] = useState(true);
-    const [pendingCount, setPendingCount] = useState(0);
-    const [isSyncing, setIsSyncing] = useState(false);
+  // Ecouter les changements de connexion
 
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const online = state.isConnected ?? false;
+      setIsOnline(online);
 
-    // Ecouter les changements de connexion
+      if (online && pendingCount > 0) {
+        syncNow();
+      }
+    });
 
-    useEffect(() => {
-        const unsubscribe = NetInfo.addEventListener(state => {
-            const online = state.isConnected ?? false;
-            setIsOnline(online);
+    loadPendingCount();
 
-            if (online && pendingCount > 0) {
-                syncNow();
-            }
-        });
+    return () => unsubscribe();
+  }, []);
 
-        loadPendingCount();
+  const loadPendingCount = async () => {
+    const queue = await OFFLINE.getQueue();
+    setPendingCount(queue.length);
+  };
 
-        return () => unsubscribe();
-    }, []);
+  const syncNow = useCallback(async () => {
+    if (isSyncing || !isOnline) return;
+    setIsSyncing(true);
 
-    const loadPendingCount = async () => {
-        const queue = await OFFLINE.getQueue();
-        setPendingCount(queue.length);
+    try {
+      const result = await OFFLINE.syncQueue();
+      console.log(
+        `Sync terminée : ${result.synced} réussi, ${result.failed} échoué`,
+      );
+      await loadPendingCount();
+    } catch (error) {
+      console.log("Sync error", error);
+    } finally {
+      setIsSyncing(false);
     }
+  }, [isOnline, isSyncing]);
 
-    const syncNow = useCallback(async () => {
-        if (isSyncing || !isOnline) return;
-        setIsSyncing(true);
-
-        try {
-
-            const result = await OFFLINE.syncQueue();
-            console.log(`Sync terminée : ${result.synced} réussi, ${result.failed} échoué`);
-            await loadPendingCount();
-            
-        } catch (error) {
-            console.log('Sync error', error);
-        } finally {
-            setIsSyncing(false);
-        }
-    }, [isOnline, isSyncing]);
-
-    return {
-        isOnline,
-        pendingCount,
-        isSyncing,
-        syncNow,
-        refreshPendingCount: loadPendingCount
-    }
-}
+  return {
+    isOnline,
+    pendingCount,
+    isSyncing,
+    syncNow,
+    refreshPendingCount: loadPendingCount,
+  };
+};
