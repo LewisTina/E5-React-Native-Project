@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { useAuth } from "@/contexts/auth-context";
 import { useActivities, useTrips } from "@/hooks/use-api-fetch";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { retrieveUpcomingTrips, retrieveStatistics } = useTrips();
   const { retrieveActivities } = useActivities();
   const { data: statisticsDatas } = useQuery({
@@ -57,14 +59,14 @@ export default function HomeScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView>
-        {/* Header */}
-        <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
+    <ScrollView>
+      {/* Header */}
+      <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
+        <SafeAreaView edges={["top"]}>
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greentingText}>Hello</Text>
-              <Text style={styles.firstnameText}>Odilon!</Text>
+              <Text style={styles.firstnameText}>{user?.name} !</Text>
             </View>
             <TouchableOpacity
               style={styles.notificationBtn}
@@ -93,137 +95,137 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
-        </LinearGradient>
+        </SafeAreaView>
+      </LinearGradient>
 
-        {/* Content */}
-        <View style={styles.homeContent}>
-          {/* Upcoming trips */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Upcoming Trips</Text>
-              <TouchableOpacity onPress={() => router.replace("/(tabs)/trips")}>
-                <Text style={styles.homeSeeAllBtn}>See All</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {upcomingTripsDatas?.data?.map((trip) => {
-          const dayLeft = Math.ceil(
-            (new Date(trip.startDate).getTime() - new Date().getTime()) /
-              (1000 * 60 * 60 * 24),
-          );
-          return (
-            <TouchableOpacity
-              key={trip.title}
-              style={styles.tripCard}
-              onPress={() =>
-                router.push({
-                  pathname: "/trips/[id]",
-                  params: { id: trip.id, from: "trips" },
-                })
-              }
-            >
-              <Image source={trip.image} style={styles.tripImage} />
-              <View style={styles.tripInfo}>
-                <Text style={styles.tripTitle}>{trip.title}</Text>
-                <View style={styles.tripDate}>
-                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                  <Text style={styles.tripDateText}>
-                    {new Date(trip.startDate).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                    })}{" "}
-                    -{" "}
-                    {new Date(trip.endDate).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </Text>
-                </View>
-                <View style={styles.tripBadge}>
-                  <Text style={styles.tripBadgeText}>
-                    {dayLeft < 0
-                      ? "Passé de " + Math.abs(dayLeft) + " jours"
-                      : dayLeft === 0
-                        ? "Aujourd'hui"
-                        : dayLeft === 1
-                          ? "Demain"
-                          : `${dayLeft} jours`}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-
-        {/* Quick Actions */}
+      {/* Content */}
+      <View style={styles.homeContent}>
+        {/* Upcoming trips */}
         <View style={styles.section}>
-          <Text style={{ ...styles.sectionTitle, paddingHorizontal: 12 }}>
-            Quick Actions
-          </Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity>
-              <LinearGradient
-                colors={["#a855f7", "#ec4899"]}
-                style={styles.quickActionCard}
-              >
-                <Ionicons name="add-circle-outline" size={24} color="#fff" />
-                <Text style={styles.quickActionLabel}>New Trip</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <LinearGradient
-                colors={["#3b82f6", "#06b6d4"]}
-                style={styles.quickActionCard}
-              >
-                <Ionicons name="camera-outline" size={24} color="#fff" />
-                <Text style={styles.quickActionLabel}>Add Photo</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <LinearGradient
-                colors={["#10b981", "#059669"]}
-                style={styles.quickActionCard}
-              >
-                <Ionicons name="map-outline" size={24} color="#fff" />
-                <Text style={styles.quickActionLabel}>Explore</Text>
-              </LinearGradient>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Upcoming Trips</Text>
+            <TouchableOpacity onPress={() => router.replace("/(tabs)/trips")}>
+              <Text style={styles.homeSeeAllBtn}>See All</Text>
             </TouchableOpacity>
           </View>
         </View>
+      </View>
 
-        {/* Recent Activity */}
-
-        <View style={styles.section}>
-          <View style={{ paddingHorizontal: 12 }}>
-            <Text style={{ ...styles.sectionTitle, paddingHorizontal: 12 }}>
-              Recent Activity
-            </Text>
-
-            {activitiesDatas?.data?.map((activity, idx) => (
-              <View style={styles.activityCard} key={idx}>
-                <Text style={styles.activityIcon}>
-                  <Ionicons
-                    name={
-                      `${activity.type}-outline` as keyof typeof Ionicons.glyphMap
-                    }
-                    size={24}
-                    color="#6b7280"
-                  />
+      {upcomingTripsDatas?.data?.map((trip) => {
+        const dayLeft = Math.ceil(
+          (new Date(trip.startDate).getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24),
+        );
+        return (
+          <TouchableOpacity
+            key={trip.title}
+            style={styles.tripCard}
+            onPress={() =>
+              router.push({
+                pathname: "/trips/[id]",
+                params: { id: trip.id, from: "trips" },
+              })
+            }
+          >
+            <Image source={trip.image} style={styles.tripImage} />
+            <View style={styles.tripInfo}>
+              <Text style={styles.tripTitle}>{trip.title}</Text>
+              <View style={styles.tripDate}>
+                <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                <Text style={styles.tripDateText}>
+                  {new Date(trip.startDate).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                  })}{" "}
+                  -{" "}
+                  {new Date(trip.endDate).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </Text>
-                <View>
-                  <Text style={styles.activityText}>{activity.text}</Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
-                </View>
               </View>
-            ))}
-          </View>
+              <View style={styles.tripBadge}>
+                <Text style={styles.tripBadgeText}>
+                  {dayLeft < 0
+                    ? "Passé de " + Math.abs(dayLeft) + " jours"
+                    : dayLeft === 0
+                      ? "Aujourd'hui"
+                      : dayLeft === 1
+                        ? "Demain"
+                        : `${dayLeft} jours`}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
+
+      {/* Quick Actions */}
+      <View style={styles.section}>
+        <Text style={{ ...styles.sectionTitle, paddingHorizontal: 12 }}>
+          Quick Actions
+        </Text>
+        <View style={styles.quickActionsGrid}>
+          <TouchableOpacity>
+            <LinearGradient
+              colors={["#a855f7", "#ec4899"]}
+              style={styles.quickActionCard}
+            >
+              <Ionicons name="add-circle-outline" size={24} color="#fff" />
+              <Text style={styles.quickActionLabel}>New Trip</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <LinearGradient
+              colors={["#3b82f6", "#06b6d4"]}
+              style={styles.quickActionCard}
+            >
+              <Ionicons name="camera-outline" size={24} color="#fff" />
+              <Text style={styles.quickActionLabel}>Add Photo</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <LinearGradient
+              colors={["#10b981", "#059669"]}
+              style={styles.quickActionCard}
+            >
+              <Ionicons name="map-outline" size={24} color="#fff" />
+              <Text style={styles.quickActionLabel}>Explore</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+
+      {/* Recent Activity */}
+
+      <View style={styles.section}>
+        <View style={{ paddingHorizontal: 12 }}>
+          <Text style={{ ...styles.sectionTitle, paddingHorizontal: 12 }}>
+            Recent Activity
+          </Text>
+
+          {activitiesDatas?.data?.map((activity, idx) => (
+            <View style={styles.activityCard} key={idx}>
+              <Text style={styles.activityIcon}>
+                <Ionicons
+                  name={
+                    `${activity.type}-outline` as keyof typeof Ionicons.glyphMap
+                  }
+                  size={24}
+                  color="#6b7280"
+                />
+              </Text>
+              <View>
+                <Text style={styles.activityText}>{activity.text}</Text>
+                <Text style={styles.activityTime}>{activity.time}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 

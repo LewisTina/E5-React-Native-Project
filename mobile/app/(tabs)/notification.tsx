@@ -128,25 +128,26 @@ export default function NotificationScreen() {
     addTestResult("✅ Badge effacé");
   };
   const handleClearResults = async () => {
-    await setTestResults([]);
+    setTestResults([]);
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Test Notifications</Text>
-          <View style={styles.placeholder} />
-        </View>
+        <SafeAreaView edges={["top"]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Test Notifications</Text>
+            <View style={styles.placeholder} />
+          </View>
+        </SafeAreaView>
       </LinearGradient>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         {/* Status Card */}
         <View style={styles.statusCard}>
           <View style={styles.statusRow}>
@@ -291,20 +292,14 @@ export default function NotificationScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-  },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
+    padding: 16,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
   },

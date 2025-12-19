@@ -53,10 +53,10 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/*Header*/}
-        <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
+    <ScrollView showsVerticalScrollIndicator={false}>
+      {/*Header*/}
+      <LinearGradient colors={["#a855f7", "#ec4899"]} style={styles.header}>
+        <SafeAreaView edges={["top"]}>
           <Text style={styles.headerTitle}>Profil</Text>
 
           {/*Profile card*/}
@@ -84,54 +84,50 @@ export default function ProfileScreen() {
               ))}
             </View>
           </View>
-        </LinearGradient>
+        </SafeAreaView>
+      </LinearGradient>
 
-        {/*Content*/}
-        <View style={styles.content}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={async () => {
-              Alert.alert(
-                "Déconnexion",
-                "Etes-vous sûr de vouloir vous déconecter ?",
-                [
-                  { text: "Annuler", style: "cancel" },
-                  {
-                    text: "Déconnexion",
-                    style: "destructive",
-                    onPress: async () => {
-                      await logout();
-                      router.replace("/login");
-                    },
+      {/*Content*/}
+      <View style={styles.content}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={async () => {
+            Alert.alert(
+              "Déconnexion",
+              "Etes-vous sûr de vouloir vous déconecter ?",
+              [
+                { text: "Annuler", style: "cancel" },
+                {
+                  text: "Déconnexion",
+                  style: "destructive",
+                  onPress: async () => {
+                    await logout();
+                    router.replace("/login");
                   },
-                ],
-              );
-            }}
+                },
+              ],
+            );
+          }}
+        >
+          <LinearGradient
+            colors={["#ef4444", "#f43f5e"]}
+            style={styles.menuItemIcon}
           >
-            <LinearGradient
-              colors={["#ef4444", "#f43f5e"]}
-              style={styles.menuItemIcon}
-            >
-              <Ionicons name="log-out-outline" size={24} color="white" />
-            </LinearGradient>
-            <View>
-              <Text style={styles.menuItemTitle}>Déconnexion</Text>
-              <Text style={styles.menuItemSubTitle}>
-                Se déconnecter de votre compte
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <Ionicons name="log-out-outline" size={24} color="white" />
+          </LinearGradient>
+          <View>
+            <Text style={styles.menuItemTitle}>Déconnexion</Text>
+            <Text style={styles.menuItemSubTitle}>
+              Se déconnecter de votre compte
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-  },
   header: {
     paddingHorizontal: 24,
     paddingTop: 16,
